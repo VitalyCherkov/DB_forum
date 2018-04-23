@@ -1,7 +1,14 @@
+# sudo docker system prune
+# sudo docker build -t v.cherkov .
+# sudo docker run -p 5000:5000 --name v.cherkov -t v.cherkov
+# sudo docker rm v.cherkov
+
 FROM ubuntu:16.04
 LABEL maintainer="vv-ch@bk.ru"
 
 RUN apt-get -y update
+RUN apt-get install -y apt-utils
+RUN apt-get install -y dialog
 
 ENV PG_VERSION=9.5
 
@@ -14,27 +21,20 @@ RUN /etc/init.d/postgresql start &&\
     createdb -O docker docker &&\
     /etc/init.d/postgresql stop
 
-RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/$PGVER/main/pg_hba.conf
+RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/${PG_VERSION}/main/pg_hba.conf
 
-RUN echo "listen_addresses='*'" >> /etc/postgresql/$PGVER/main/postgresql.conf
+RUN echo "listen_addresses='*'" >> /etc/postgresql/${PG_VERSION}/main/postgresql.conf
 
-RUN echo "synchronous_commit = off" >> /etc/postgresql/$PGVER/main/postgresql.conf
+RUN echo "synchronous_commit = off" >> /etc/postgresql/${PG_VERSION}/main/postgresql.conf
 
 # Порт БД
-EXPOSE 5050
+EXPOSE 5432
 
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 USER root
 
-RUN apt-get -y install software-properties-common python-software-properties
-RUN add-apt-repository ppa:webupd8team/java
-RUN apt-get -y update
-RUN echo oracle-java9-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && apt-get -y install oracle-java9-installer && apt-get -y install oracle-java9-set-default
-
-RUN java -version
-RUN javac -version
-
+RUN apt-get install -y openjdk-9-jdk-headless
 RUN apt-get install -y maven
 
 ENV WORK /opt/database-project
