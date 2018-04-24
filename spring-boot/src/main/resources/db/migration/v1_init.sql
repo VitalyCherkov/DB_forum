@@ -58,7 +58,7 @@ CREATE TABLE Forum
 
   threads INTEGER DEFAULT 0 NOT NULL,
 
-  TITLE TEXT
+  title TEXT
 );
 
 -------------------------------------------------------------------------
@@ -118,7 +118,7 @@ CREATE UNIQUE INDEX Thread_ui_slug
 --
 -- ######################################################################
 
-CREATE TABLE Messages
+CREATE TABLE Post
 (
   id BIGSERIAL
     CONSTRAINT Messages_id_pk PRIMARY KEY,
@@ -145,29 +145,29 @@ CREATE TABLE Messages
 -------------------------------------------------------------------------
 
 CREATE UNIQUE INDEX Messages_ui_id
-  ON Messages (id);
+  ON Post (id);
 
 CREATE INDEX Messages_i_asc_parentid_threadid
-  ON Messages (parentid, threadid, path, id);
+  ON Post (parentid, threadid, path, id);
 
 CREATE INDEX Messages_i_desc_parentid_threadid
-  ON Messages (parentid, threadid, path DESC, id DESC);
+  ON Post (parentid, threadid, path DESC, id DESC);
 
 CREATE INDEX Messages_i_asc_threadid
-  ON Messages (threadid, path, id);
+  ON Post (threadid, path, id);
 
 CREATE INDEX Messages_i_desc_parentid_threadid
-  ON Messages (threadid, path DESC, id DESC);
+  ON Post (threadid, path DESC, id DESC);
 
 CREATE INDEX Messages_i_root
-  ON Messages (threadid, path, id)
+  ON Post (threadid, path, id)
   WHERE threadid is 0;
 
 CREATE INDEX Messages_i_asc_parentid_created
-  ON Messages (threadid, id);
+  ON Post (threadid, id);
 
 CREATE INDEX Messages_i_desc_parentid_created
-  ON Messages (threadid, id DESC);
+  ON Post (threadid, id DESC);
 
 -- TODO: Message first parent indexes
 
@@ -182,7 +182,7 @@ CREATE INDEX Messages_i_desc_parentid_created
 --
 -------------------------------------------------------------------------
 
-CREATE TABLE Votes
+CREATE TABLE Vote
 (
   threadid BIGINT NOT NULL
     REFERENCES Thread (id),
@@ -285,7 +285,7 @@ $$;
 
 CREATE TRIGGER _tr_do_vote
   AFTER INSERT
-  ON Votes
+  ON Vote
   FOR EACH ROW
   EXECUTE PROCEDURE do_vote();
 
@@ -309,7 +309,7 @@ $$;
 
 CREATE TRIGGER _tr_change_vote
   AFTER UPDATE
-  ON Votes
+  ON Vote
   FOR EACH ROW
   EXECUTE PROCEDURE change_vote();
 
