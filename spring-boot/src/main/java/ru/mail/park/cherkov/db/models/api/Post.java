@@ -1,5 +1,6 @@
 package ru.mail.park.cherkov.db.models.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -27,11 +28,29 @@ public class Post {
     public String message;
 
     @JsonProperty("parent")
-    public Long parent;
+    public Long parentId;
 
     @JsonProperty("thread")
-    public Long thread;
+    public Long threadId;
 
-
-
+    @JsonCreator
+    public Post(
+            @JsonProperty("author") String author,
+            @JsonProperty("created") Timestamp created,
+            @JsonProperty("forum") String forum,
+            @JsonProperty("id") Long id,
+            @JsonProperty("isEdited") Boolean isEdited,
+            @JsonProperty("message") String message,
+            @JsonProperty("parent") Long parentId,
+            @JsonProperty("thread") Long threadId
+    ) {
+        this.author = author;
+        this.created = created;
+        this.forum = forum;
+        this.id = id;
+        this.isEdited = isEdited;
+        this.message = message;
+        this.parentId = parentId;
+        this.threadId = threadId;
+    }
 }

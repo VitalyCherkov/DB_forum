@@ -1,7 +1,5 @@
 package ru.mail.park.cherkov.db.controllers;
 
-import com.sun.xml.internal.xsom.impl.scd.Iterators;
-import javafx.geometry.Pos;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +15,7 @@ public class PostController {
     @GetMapping(value = "/api/post/{id}/details")
     public ResponseEntity<PostDetails> details(
             @PathVariable Long id,
-            @RequestParam(required = false) Iterators.Array<String> related
+            @RequestParam(required = false) List<String> related
     ) {
         return new ResponseEntity<PostDetails>(
                 HttpStatus.OK

@@ -10,7 +10,7 @@ public class Status {
     @JsonProperty("post")
     public Integer post;
 
-    @JsonProperty("thread")
+    @JsonProperty("threadId")
     public Integer thread;
 
     @JsonProperty("user")

@@ -28,13 +28,13 @@ CREATE TABLE "User"
 -------------------------------------------------------------------------
 
 -- В названии ui - unique index
-CREATE UNIQUE INDEX User_ui_id
+CREATE UNIQUE INDEX IF NOT EXISTS User_ui_id
   ON "User" (id);
 
-CREATE UNIQUE INDEX User_ui_nickname
+CREATE UNIQUE INDEX IF NOT EXISTS User_ui_nickname
   ON "User" (nickname);
 
-CREATE UNIQUE INDEX User_ui_email
+CREATE UNIQUE INDEX IF NOT EXISTS User_ui_email
   ON "User" (email);
 
 
@@ -90,6 +90,10 @@ CREATE TABLE Thread
 
   slug CITEXT,
 
+  forumslug CITEXT,
+
+  nickname CITEXT,
+
   title TEXT,
 
   messagetext TEXT NOT NULL,
@@ -114,14 +118,14 @@ CREATE UNIQUE INDEX Thread_ui_slug
 
 -- ######################################################################
 --
--- Messages
+-- Post
 --
 -- ######################################################################
 
 CREATE TABLE Post
 (
   id BIGSERIAL
-    CONSTRAINT Messages_id_pk PRIMARY KEY,
+    CONSTRAINT Post_id_pk PRIMARY KEY,
 
   userid BIGINT NOT NULL
     REFERENCES "User" (id),
@@ -137,39 +141,43 @@ CREATE TABLE Post
 
   isedited BOOLEAN DEFAULT FALSE NOT NULL,
 
-  path INTEGER []
+  path INTEGER [],
+
+  threadslug CITEXT,
+
+  forumslug CITEXT
 );
 
 -------------------------------------------------------------------------
--- Messages indexes
+-- Post indexes
 -------------------------------------------------------------------------
 
-CREATE UNIQUE INDEX Messages_ui_id
+CREATE UNIQUE INDEX IF NOT EXISTS Post_ui_id
   ON Post (id);
 
-CREATE INDEX Messages_i_asc_parentid_threadid
+CREATE INDEX IF NOT EXISTS Post_i_asc_parentid_threadid
   ON Post (parentid, threadid, path, id);
 
-CREATE INDEX Messages_i_desc_parentid_threadid
+CREATE INDEX IF NOT EXISTS Post_i_desc_parentid_threadid
   ON Post (parentid, threadid, path DESC, id DESC);
 
-CREATE INDEX Messages_i_asc_threadid
+CREATE INDEX IF NOT EXISTS Post_i_asc_threadid
   ON Post (threadid, path, id);
 
-CREATE INDEX Messages_i_desc_parentid_threadid
+CREATE INDEX IF NOT EXISTS Post_i_desc_threadid
   ON Post (threadid, path DESC, id DESC);
 
-CREATE INDEX Messages_i_root
+CREATE INDEX IF NOT EXISTS Post_i_root
   ON Post (threadid, path, id)
-  WHERE threadid is 0;
+  WHERE threadid = 0;
 
-CREATE INDEX Messages_i_asc_parentid_created
+CREATE INDEX IF NOT EXISTS Post_i_asc_parentid_created
   ON Post (threadid, id);
 
-CREATE INDEX Messages_i_desc_parentid_created
+CREATE INDEX IF NOT EXISTS Post_i_desc_parentid_created
   ON Post (threadid, id DESC);
 
--- TODO: Message first parent indexes
+-- TODO: Message first parentId indexes
 
 
 -- ######################################################################
@@ -214,7 +222,7 @@ CREATE TABLE ForumUser
 
   userid BIGINT,
 
-  nickname CITEXT COLLATE usc_basic,
+  nickname CITEXT COLLATE ucs_basic,
 
   forumslug CITEXT,
 
@@ -226,10 +234,10 @@ CREATE TABLE ForumUser
 -- ForumUser indexes
 -------------------------------------------------------------------------
 
-CREATE INDEX ForumUser_i_acs_forumslug_nickname
+CREATE INDEX IF NOT EXISTS ForumUser_i_acs_forumslug_nickname
   ON ForumUser (forumslug, nickname);
 
-CREATE INDEX ForumUser_i_desc_forumslug_nickname
+CREATE INDEX IF NOT EXISTS ForumUser_i_desc_forumslug_nickname
   ON ForumUser (forumslug, nickname DESC);
 
 

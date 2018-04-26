@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.mail.park.cherkov.db.models.api.Forum;
 import ru.mail.park.cherkov.db.models.api.Thread;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -30,9 +31,21 @@ public class ForumController {
     public ResponseEntity<Forum> details(
             @PathVariable String slug
     ) {
+
+        System.out.println("KEK LOL");
+
         return new ResponseEntity<Forum>(
+                new Forum(
+                        slug,
+                        "title",
+                        "user",
+                        5,
+                        10
+                ),
+                new HttpHeaders(),
                 HttpStatus.OK
         );
+
     }
 
     @GetMapping(value = "/api/forum/{slug}/threads")

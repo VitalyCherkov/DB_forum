@@ -17,7 +17,7 @@ public class PostDetails {
     @JsonProperty("post")
     public Post post;
 
-    @JsonProperty("thread")
+    @JsonProperty("threadId")
     public Thread thread;
 
     @JsonCreator
@@ -25,7 +25,7 @@ public class PostDetails {
             @JsonProperty("author") User author,
             @JsonProperty("forum") Forum forum,
             @JsonProperty("post") Post post,
-            @JsonProperty("thread") Thread thread
+            @JsonProperty("threadId") Thread thread
     ) {
         this.author = author;
         this.forum = forum;

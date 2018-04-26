@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.sql.Timestamp;
+
 public class Thread {
 
     @JsonProperty("author")
@@ -11,7 +13,7 @@ public class Thread {
 
     @JsonProperty("created")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-    public String created;
+    public Timestamp created;
 
     @JsonProperty("forum")
     public String forum;
@@ -34,7 +36,7 @@ public class Thread {
     @JsonCreator
     public Thread(
             @JsonProperty("author") String author,
-            @JsonProperty("created") String created,
+            @JsonProperty("created") Timestamp created,
             @JsonProperty("forum") String forum,
             @JsonProperty("id") Long id,
             @JsonProperty("message") String message,
