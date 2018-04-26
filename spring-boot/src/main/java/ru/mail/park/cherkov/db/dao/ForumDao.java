@@ -21,18 +21,15 @@ public class ForumDao {
     public ForumDao(JdbcTemplate template) {
 
         this.template = template;
-        this.rowMapper = new RowMapper<ForumDBModel>() {
-            public ForumDBModel mapRow(ResultSet resultSet, int i) throws SQLException {
-                return new ForumDBModel(
+
+        this.rowMapper = (resultSet, i) ->
+                new ForumDBModel(
                         resultSet.getString("slug"),
                         resultSet.getString("title"),
                         resultSet.getString("author"),
                         resultSet.getInt("posts"),
                         resultSet.getInt("threads")
                 );
-            }
-        };
-
     }
 
     public ForumDBModel create(Forum forum) {
@@ -56,27 +53,22 @@ public class ForumDao {
                 "SELECT F.posts AS posts,\n" +
                 "       F.threads AS threads,\n" +
                 "       F.title AS title,\n" +
-                "       F.nickname AS nickname FROM\n" +
+                "       U.nickname AS nickname FROM\n" +
                 "   (\n" +
                 "       SELECT posts, threads, title, userid FROM Forum\n" +
                 "           WHERE Forum.slug = ?::CITEXT\n" +
                 "   ) AS F\n" +
                 "   JOIN (\n" +
-                "       SELECT nickname, id AS uid FROM \"User\"\n" +
+                "       SELECT nickname, id FROM \"User\"\n" +
                 "   ) AS U\n" +
                 "   ON U.id = F.userid;\n";
 
-        List<ForumDBModel> result = template.query(
+        return template.queryForObject(
                 sql,
-                ps -> ps.setString(1, slug),
-                rowMapper
+                rowMapper,
+                slug
         );
-        if (result.isEmpty()) {
-            throw new ForumNotFound();
-        }
-        return result.get(0);
     };
-
 
 
 }

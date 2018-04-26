@@ -10,6 +10,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -40,10 +41,12 @@ public class ThreadDao {
 
     public List<ThreadDBModel> getByForum(
             String forumSlug,
+            Integer limit,
             Timestamp since,
-            Boolean desc,
-            Integer limit
+            Boolean desc
     ) {
+        ArrayList <Object> args = new ArrayList<Object>();
+
         StringBuilder sql = new StringBuilder(
                 "SELECT T.nickname AS author,\n" +
                 "       T.created AS created,\n" +
@@ -56,6 +59,7 @@ public class ThreadDao {
                 "FROM Thread T\n" +
                 "WHERE ?::CITEXT = T.forumslug\n"
         );
+        args.add(forumSlug);
 
         if (since != null) {
             if (desc) {
@@ -64,6 +68,7 @@ public class ThreadDao {
             else {
                 sql.append(" AND T.created >= ?::timestamptz");
             }
+            args.add(since);
         }
 
         if (desc) {
@@ -74,21 +79,83 @@ public class ThreadDao {
         }
 
         if (limit >= 0) {
-            sql.append(" LIMIT ").append(limit.toString());
+            sql.append(" LIMIT ?");
+            args.add(limit);
         }
 
         sql.append(";");
 
         return template.query(
                 sql.toString(),
-                ps -> {
-                    ps.setString(1, forumSlug);
-                    if (since != null) {
-                        ps.setTimestamp(2, since);
-                    }
-                },
+                args.toArray(),
                 rowMapper
         );
+    }
+
+    public ThreadDBModel getBySlugOrId(String slug, Long id) {
+        ArrayList <Object> args = new ArrayList<Object>();
+
+        String sql = "SELECT \n" +
+                "    T.id AS id,\n" +
+                "    T.slug AS slug,\n" +
+                "    T.messagetext AS \"message\",\n" +
+                "    T.nickname AS author,\n" +
+                "    T.created AS created,\n" +
+                "    T.forumslug AS forum,\n" +
+                "    T.title AS title,\n" +
+                "    T.votes AS votes\n" +
+                "FROM Thread T WHERE";
+
+        if (slug != null) {
+            sql += " T.slug = ?::CITEXT;";
+            args.add(slug);
+        }
+        else {
+            sql += " T.id = ?";
+            args.add(id);
+        }
+
+        return template.queryForObject(
+                sql,
+                rowMapper,
+                args.toArray()
+        );
+    }
+
+    public ThreadDBModel updateBySlugOrId(String message, String title, String slug, Long id) {
+        ArrayList <Object> args = new ArrayList<Object>();
+
+        args.add(message);
+        args.add(title);
+
+        String sql =    "UPDATE Thread T\n" +
+                        "    SET (T.messagetext, T.title) = (?, ?) WHERE\n";
+
+        if (slug != null) {
+            sql += " T.slug = ?::CITEXT;";
+            args.add(slug);
+        }
+        else {
+            sql += " T.id = ?";
+            args.add(id);
+        }
+
+        sql +=  "    RETURNING \n" +
+                "        T.id AS id,\n" +
+                "        T.slug AS slug,\n" +
+                "        T.messagetext AS \"message\",\n" +
+                "        T.nickname AS author,\n" +
+                "        T.created AS created,\n" +
+                "        T.forumslug AS forum,\n" +
+                "        T.title AS title,\n" +
+                "        T.votes AS votes;";
+
+        return template.queryForObject(
+                sql,
+                rowMapper,
+                args.toArray()
+        );
+
     }
 
 }

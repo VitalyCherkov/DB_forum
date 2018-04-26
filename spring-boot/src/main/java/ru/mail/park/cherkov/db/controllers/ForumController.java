@@ -42,7 +42,6 @@ public class ForumController {
                         5,
                         10
                 ),
-                new HttpHeaders(),
                 HttpStatus.OK
         );
 

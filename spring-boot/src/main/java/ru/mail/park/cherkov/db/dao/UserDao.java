@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 import ru.mail.park.cherkov.db.models.api.User;
 import ru.mail.park.cherkov.db.models.db.UserDBModel;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import javax.swing.*;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,18 +18,17 @@ public class UserDao {
     private RowMapper<UserDBModel> rowMapper;
 
     public UserDao(JdbcTemplate template) {
+
         this.template = template;
-        this.rowMapper = new RowMapper<UserDBModel>() {
-            @Override
-            public UserDBModel mapRow(ResultSet resultSet, int i) throws SQLException {
-                return new UserDBModel(
+
+        this.rowMapper = (resultSet, i) ->
+                new UserDBModel(
                         resultSet.getString("nickname"),
                         resultSet.getString("email"),
                         resultSet.getString("fullname"),
                         resultSet.getString("about")
                 );
-            }
-        };
+
     }
 
     public UserDBModel create(User user) {
@@ -55,14 +54,7 @@ public class UserDao {
 
     public List<UserDBModel> getByNickname(String nickname) {
 
-        final String sql =    "SELECT email, nickname, fullname, about FROM \"User\"" +
-                        "   WHERE nickname = ?::CITEXT";
-
-        return template.query(
-                sql,
-                ps -> ps.setString(1, nickname),
-                rowMapper
-        );
+        return getByNicknameOrEmail(nickname, null);
 
     }
 
@@ -74,7 +66,7 @@ public class UserDao {
                         "       COALESCE(?, fullname),\n" +
                         "       COALESCE(?, about)\n" +
                         "   )\n" +
-                        "   WHERE \"Users\".nickname = ?::CITEXT\n" +
+                        "   WHERE \"User\".nickname = ?::CITEXT\n" +
                         "   RETURNING email, nickname, fullname, about;";
 
         return template.queryForObject(
@@ -88,6 +80,83 @@ public class UserDao {
 
     }
 
+    public List<UserDBModel> getByForum (
+            String forumSlug,
+            Integer limit,
+            String sinceNickname,
+            Boolean desc
+    ) {
 
+        ArrayList<Object> args = new ArrayList<Object>();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT \n" +
+                "    U.about AS about, \n" +
+                "    U.email AS email, \n" +
+                "    U.fullname AS fullname, \n" +
+                "    U.nickname AS nickname\n" +
+                "    FROM (\n" +
+                "        SELECT ForumUser.userid AS fid FROM ForumUser\n" +
+                "            WHERE ForumUser.forumslug = ?::CITEXT "
+        );
+        args.add(forumSlug);
+
+        if (sinceNickname != null) {
+            if (desc) {
+                sql.append("AND ForumUser.nickname < ?::CITEXT\n");
+            }
+            else {
+                sql.append("AND ForumUser.nickname > ?::CITEXT\n");
+            }
+            args.add(sinceNickname);
+        }
+
+        sql.append(") AS F JOIN \"User\" AS U ON U.id = F.userid");
+        if (desc) {
+            sql.append(" ORDER BY U.nickname DESC");
+        }
+        else {
+            sql.append(" ORDER BY U.nickname ASC");
+        }
+
+        if (limit >= 0) {
+            sql.append("LIMIT ?");
+            args.add(limit);
+        }
+
+        sql.append(";");
+
+        return template.query(
+                sql.toString(),
+                args.toArray(),
+                rowMapper
+        );
+
+    }
+
+    public List<UserDBModel> getByNicknameOrEmail(String nickname, String email){
+
+        String sql =    "SELECT email, nickname, fullname, about FROM \"User\"" +
+                        "   WHERE nickname = ?::CITEXT";
+
+        if (email != null) {
+            sql += " OR email = ?::CITEXT;";
+        }
+        else {
+            sql += ";";
+        }
+
+        return template.query(
+                sql,
+                ps -> {
+                    ps.setString(1, nickname);
+                    if (email != null) {
+                        ps.setString(2, email);
+                    }
+                },
+                rowMapper
+        );
+
+    }
 
 }

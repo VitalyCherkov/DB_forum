@@ -52,7 +52,7 @@ ADD spring-boot/ ${WORK}/spring-boot/
 
 WORKDIR ${WORK}/spring-boot
 
-RUN mvn package
+RUN mvn clean package
 
 # Порт приложения
 EXPOSE 5000
