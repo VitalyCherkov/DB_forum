@@ -8,41 +8,50 @@ import java.sql.Timestamp;
 
 public class Thread {
 
-    @JsonProperty("author")
     public String author;
-
-    @JsonProperty("created")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
     public Timestamp created;
-
-    @JsonProperty("forum")
     public String forum;
-
-    @JsonProperty("id")
     public Long id = -1L;
-
-    @JsonProperty("message")
     public String message;
-
-    @JsonProperty("slug")
     public String slug = "";
-
-    @JsonProperty("title")
     public String title;
-
-    @JsonProperty("votes")
     public Integer votes = 0;
+
+    public Thread(
+            @JsonProperty("author")
+            String author,
+            @JsonProperty("created")
+            @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+            Timestamp created,
+            @JsonProperty("message")
+            String message,
+            @JsonProperty("title")
+            String title
+    ) {
+        this.author = author;
+        this.created = created;
+        this.message = message;
+        this.title = title;
+    }
 
     @JsonCreator
     public Thread(
-            @JsonProperty("author") String author,
-            @JsonProperty("created") Timestamp created,
-            @JsonProperty("forum") String forum,
-            @JsonProperty("id") Long id,
             @JsonProperty("message") String message,
-            @JsonProperty("slug") String slug,
-            @JsonProperty("title") String title,
-            @JsonProperty("votes") Integer votes
+            @JsonProperty("title") String title
+    ) {
+        this.message = message;
+        this.title = title;
+    }
+
+    public Thread(
+            String author,
+            Timestamp created,
+            String forum,
+            Long id,
+            String message,
+            String slug,
+            String title,
+            Integer votes
     ) {
         this.author = author;
         this.created = created;

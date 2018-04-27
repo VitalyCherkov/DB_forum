@@ -40,7 +40,7 @@ public class UserController {
         if (user == null) {
             user = new User();
         }
-        LoggerFactory.getLogger("controller").debug("KEK");
+        LoggerFactory.getLogger(UserController.class).debug(user.toString());
 
         user.nickname = nickname;
         return new ResponseEntity<User>(

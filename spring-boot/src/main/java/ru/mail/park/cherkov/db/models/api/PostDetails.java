@@ -8,24 +8,18 @@ import java.sql.Timestamp;
 
 public class PostDetails {
 
-    @JsonProperty("author")
-    public User author;
+    public User author = null;
+    public Forum forum = null;
+    public Post post = null;
+    public Thread thread = null;
 
-    @JsonProperty("forum")
-    public Forum forum;
+    public PostDetails() { }
 
-    @JsonProperty("post")
-    public Post post;
-
-    @JsonProperty("threadId")
-    public Thread thread;
-
-    @JsonCreator
     public PostDetails(
-            @JsonProperty("author") User author,
-            @JsonProperty("forum") Forum forum,
-            @JsonProperty("post") Post post,
-            @JsonProperty("threadId") Thread thread
+            User author,
+            Forum forum,
+            Post post,
+            Thread thread
     ) {
         this.author = author;
         this.forum = forum;

@@ -6,7 +6,7 @@ public class PostDBModel {
 
     public Long id;
     public String message;
-    public Boolean isEdited;
+    public Boolean isEdited = false;
     public Long threadId = 0L;
     public Long parentId = 0L;
     public String author;

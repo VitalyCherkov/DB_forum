@@ -58,7 +58,9 @@ CREATE TABLE Forum
 
   threads INTEGER DEFAULT 0 NOT NULL,
 
-  title TEXT
+  title TEXT,
+
+  nickname TEXT
 );
 
 -------------------------------------------------------------------------
@@ -113,7 +115,11 @@ CREATE UNIQUE INDEX Thread_ui_id
 CREATE UNIQUE INDEX Thread_ui_slug
   ON Thread (slug);
 
--- TODO: Thread indexes for acs & desc by created
+CREATE INDEX Thread_i_asc_forumslug_created
+  ON Thread (forumslug, created);
+
+CREATE INDEX Thread_i_desc_forumslug_created
+  ON Thread (forumslug, created DESC);
 
 
 -- ######################################################################
@@ -179,7 +185,11 @@ CREATE INDEX IF NOT EXISTS Post_i_asc_parentid_created
 CREATE INDEX IF NOT EXISTS Post_i_desc_parentid_created
   ON Post (threadid, id DESC);
 
--- TODO: Message first parentId indexes
+CREATE INDEX Post_i_asc_preparent
+  ON Post ((path[1]), path, id);
+
+CREATE INDEX Post_i_desc_preparent
+  ON Post ((path[1]), path, id);
 
 
 -- ######################################################################
@@ -250,6 +260,42 @@ CREATE INDEX IF NOT EXISTS ForumUser_i_desc_forumslug_nickname
 -- Inners start with 'T: '
 --
 -- ######################################################################
+
+-------------------------------------------------------------------------
+-- T: Post path
+-------------------------------------------------------------------------
+
+CREATE FUNCTION calc_path()
+  RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE parentPath BIGINT[];
+BEGIN
+
+  IF(NEW.parentid = 0) THEN
+    NEW.path = parentPath :: NEW.id::BIGSERIAL;
+  END IF;
+
+  parentPath = (
+    SELECT path FROM Post
+      WHERE id = NEW.parentid AND threadid = NEW.threadid
+  );
+
+  IF (CARDINALITY(parentPath) > 0) THEN
+    NEW.path = parentPath || NEW.id::BIGSERIAL;
+    RETURN NEW;
+  END IF;
+
+  RAISE INVALID_FOREIGN_KEY;
+
+END
+$$;
+
+CREATE TRIGGER _tr_calc_path
+  BEFORE INSERT
+  ON Post
+  FOR EACH ROW
+  EXECUTE PROCEDURE calc_path();
 
 -------------------------------------------------------------------------
 -- T: Forum threads inc

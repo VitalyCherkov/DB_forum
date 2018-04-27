@@ -35,14 +35,14 @@ public class Post {
 
     @JsonCreator
     public Post(
-            @JsonProperty("author") String author,
-            @JsonProperty("created") Timestamp created,
-            @JsonProperty("forum") String forum,
-            @JsonProperty("id") Long id,
-            @JsonProperty("isEdited") Boolean isEdited,
-            @JsonProperty("message") String message,
-            @JsonProperty("parent") Long parentId,
-            @JsonProperty("thread") Long threadId
+            String author,
+            Timestamp created,
+            String forum,
+            Long id,
+            Boolean isEdited,
+            String message,
+            Long parentId,
+            Long threadId
     ) {
         this.author = author;
         this.created = created;

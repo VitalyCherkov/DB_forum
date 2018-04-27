@@ -4,6 +4,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import ru.mail.park.cherkov.db.models.api.Thread;
+import ru.mail.park.cherkov.db.models.api.Vote;
 import ru.mail.park.cherkov.db.models.db.ThreadDBModel;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -36,6 +37,31 @@ public class ThreadDao {
                     resultSet.getString("forum"),
                     resultSet.getLong("id")
             );
+
+    }
+
+    public ThreadDBModel create(Thread thread) {
+
+        String sql =
+                "INSERT INTO Thread (userid, nickname, forumid, forumslug, messagetext, slug, title, created)\n" +
+                "SELECT\n" +
+                "    U.id, U.nickname, F.id, F.slug::CITEXT, ?, ?, ?, ?::TIMESTAMPTZ\n" +
+                "    FROM Forum AS F, (\n" +
+                "        SELECT id, nickname FROM \"User\"\n" +
+                "        WHERE \"USER\".nickname = ?::CITEXT\n" +
+                "        ) AS U\n" +
+                "        WHERE F.slug = ?::CITEXT\n" +
+                "RETURNING *;\n";
+
+        return template.queryForObject(
+                sql,
+                rowMapper,
+                thread.message,
+                thread.slug,
+                thread.title,
+                thread.created,
+                thread.forum
+        );
 
     }
 
@@ -122,22 +148,22 @@ public class ThreadDao {
         );
     }
 
-    public ThreadDBModel updateBySlugOrId(String message, String title, String slug, Long id) {
+    public ThreadDBModel updateBySlugOrId(Thread thread) {
         ArrayList <Object> args = new ArrayList<Object>();
 
-        args.add(message);
-        args.add(title);
+        args.add(thread.message);
+        args.add(thread.title);
 
         String sql =    "UPDATE Thread T\n" +
                         "    SET (T.messagetext, T.title) = (?, ?) WHERE\n";
 
-        if (slug != null) {
+        if (thread.slug != null) {
             sql += " T.slug = ?::CITEXT;";
-            args.add(slug);
+            args.add(thread.slug);
         }
         else {
             sql += " T.id = ?";
-            args.add(id);
+            args.add(thread.id);
         }
 
         sql +=  "    RETURNING \n" +
@@ -155,6 +181,49 @@ public class ThreadDao {
                 rowMapper,
                 args.toArray()
         );
+
+    }
+
+    public ThreadDBModel doVoteBySlug(Vote vote, String slug) {
+
+        String sql =
+                "INSERT INTO Vote (nickname, voice, threadid)\n" +
+                "    SELECT ?::CITEXT, ?, T.id FROM Thread T\n" +
+                "        WHERE T.slug = ?::CITEXT\n" +
+                "    ON CONFLICT (nickname, threadid) \n" +
+                "    DO UPDATE\n" +
+                "        SET voice = ?;";
+
+        template.update(
+                sql,
+                vote.nickname,
+                vote.voice,
+                slug,
+                vote.voice
+        );
+
+        return getBySlugOrId(slug, null);
+
+    }
+
+    public ThreadDBModel doVoteById(Vote vote, Long id) {
+
+        String sql =
+                "INSERT INTO Vote (nickname, voice, threadid)\n" +
+                "    VALUES(?::CITEXT, ?, ?) \n" +
+                "    ON CONFLICT (nickname, threadid)\n" +
+                "    DO UPDATE\n" +
+                "        SET voice = ?;";
+
+        template.update(
+                sql,
+                vote.nickname,
+                vote.voice,
+                id,
+                vote.voice
+        );
+
+        return getBySlugOrId(null, id);
 
     }
 

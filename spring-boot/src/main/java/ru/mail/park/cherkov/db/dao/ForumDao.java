@@ -26,7 +26,7 @@ public class ForumDao {
                 new ForumDBModel(
                         resultSet.getString("slug"),
                         resultSet.getString("title"),
-                        resultSet.getString("author"),
+                        resultSet.getString("nickname"),
                         resultSet.getInt("posts"),
                         resultSet.getInt("threads")
                 );
@@ -50,12 +50,12 @@ public class ForumDao {
 
     public ForumDBModel getDetails(String slug) {
         String sql =
-                "SELECT F.posts AS posts,\n" +
+                "SELECT F.slug AS slug, F.posts AS posts,\n" +
                 "       F.threads AS threads,\n" +
                 "       F.title AS title,\n" +
                 "       U.nickname AS nickname FROM\n" +
                 "   (\n" +
-                "       SELECT posts, threads, title, userid FROM Forum\n" +
+                "       SELECT posts, threads, title, userid, slug FROM Forum\n" +
                 "           WHERE Forum.slug = ?::CITEXT\n" +
                 "   ) AS F\n" +
                 "   JOIN (\n" +

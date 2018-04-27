@@ -1,19 +1,21 @@
 package ru.mail.park.cherkov.db.models.api;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class Status {
 
-    @JsonProperty("forum")
     public Integer forum;
-
-    @JsonProperty("post")
     public Integer post;
-
-    @JsonProperty("threadId")
     public Integer thread;
+    public Integer user = 0;
 
-    @JsonProperty("user")
-    public Integer user;
-
+    public Status(
+            Integer forum,
+            Integer post,
+            Integer thread
+    ) {
+        this.forum = forum;
+        this.post = post;
+        this.thread = thread;
+    }
 }

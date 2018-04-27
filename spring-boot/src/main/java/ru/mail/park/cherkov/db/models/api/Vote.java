@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Vote {
-    @JsonProperty("nickname")
     public String  nickname;
-
-    @JsonProperty("voice")
     public Integer voice;
 
     @JsonCreator

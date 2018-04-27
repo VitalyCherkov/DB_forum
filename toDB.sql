@@ -22,11 +22,23 @@
 --         WHERE "Users".nickname = ?::CITEXT
 --     RETURNING posts, slug, threads, title, user;
 
---  TODO: create thread ... 
-INSERT INTO Thread (forumid, slug, messagetext, title, created, userid)
-    SELECT ?, ?, ?, id FROM "Users"
-        WHERE "Users".nickname = ?::CITEXT
-    RETURNING *;
+--  create thread ... 
+-- INSERT INTO Thread (forumid, slug, messagetext, title, created, userid)
+--     SELECT ?, ?, ?, id FROM "Users"
+--         WHERE "Users".nickname = ?::CITEXT
+--     RETURNING *;
+
+-- -- на вход author, created, message, title
+-- INSERT INTO Thread (userid, nickname, forumid, forumslug, messagetext, slug, title, created)
+-- SELECT
+--     U.id, U.nickname, F.id, F.slug::CITEXT, ?, ?, ?, ?::TIMESTAMPTZ
+--     FROM Forum F, (
+--         SELECT id, nickname FROM "User"
+--         WHERE "USER".nickname = ?::CITEXT
+--         ) U,
+--         WHERE F.slug = ?::CITEXT RETURNING *;
+
+
 
 -- -- Forum details
 -- -- слаг уже есть, поэтому не забираем его
@@ -79,12 +91,58 @@ INSERT INTO Thread (forumid, slug, messagetext, title, created, userid)
 --     WHERE Post.id = id
 --     RETURNING *;
 
--- TODO: Service clear
+-- Service clear
 -- TODO: Service status
 
--- TODO: Thread create posts
+-- SELECT COUNT(*) AS forum, SUM(threads) AS thread, SUM(posts) AS post
+--     FROM Forum F;
+
+-------------------------------------------------------------------
+
+-- Thread create posts
 -- by slug
 -- by id
+
+-- slug_or_id
+-- posts [
+--     author,
+--     message,
+--     parent
+-- ]
+
+-- Post содержит:
+--   id BIGSERIAL
+--   userid BIGINT NOT NULL
+--   threadid BIGINT NOT NULL
+--   messagetext TEXT,
+--   parentid BIGINT DEFAULT 0,
+--   created TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+--   isedited BOOLEAN DEFAULT FALSE NOT NULL,
+--   path INTEGER [],
+--   usernickname CITEXT,
+--   threadslug CITEXT,
+--   forumslug CITEXT
+-- );
+
+-- Получить threadslug и threadid
+
+-- SELECT id, slug, forumid, forumslug FROM Thread
+--     WHERE id = ?;
+--     -- WHERE slug = ?::CITEXT;
+
+-- INSERT INTO Post (userid, usernickname, threadid, threadslug, forumid, forumslug, messagetext, created, parentid)
+--     SELECT U.id, U.nickname, ?, ?::CITEXT, ?, ?::CITEXT, ?, ?, ?
+--     FROM User AS U
+--     WHERE U.nickname = ?::CITEXT;
+
+-- -- Update number of posts
+-- UPDATE Forum
+--     SET posts = posts + ?
+--     WHERE id = ?;
+
+
+
+-------------------------------------------------------------------
 
 -- -- Thread details 
 -- SELECT 
@@ -116,27 +174,50 @@ INSERT INTO Thread (forumid, slug, messagetext, title, created, userid)
 --     -- WHERE T.slug = ?::CITEXT;
 
 -- TODO: Posts by thread
-SELECT 
-    P.nickname AS author, 
-    P.created AS created,
-    P.forumslug AS forum,
-    P.id AS id,
-    P.isedited AS isEdited,
-    P.messagetext AS message,
-    P.parent AS parent,
-    P.threadid AS thread
-FROM Posts P
-    WHERE
-        P.id > ? AND 
-        P.threadslug = ?::CITEXT -- P.id = ?
--- asc / desc
--- order by
--- limit
--- since
 
--- TODO: do Vote
+-- Flat sort
+SELECT * FROM Post
+    WHERE threadid = ?
+        AND id < since -- if DESC
+        -- AND id > since -- id ASC
+        ORDER BY id DESC -- ASC
+        LIMIT ?;
+
+-- Tree sort
+SELECT * FROM Post
+    WHERE threadid = ?
+        AND path > (SELECT path FROM Posts WHERE id = ?) -- < if DESC
+    ORDER BY path ASC, id ASC -- or DESC
+    LIMIT ?;
+
+-- P Tree Sort
+SELECT * FROM Post
+WHERE path[1] IN (
+    SELECT id FROM Post
+    WHERE threadid = ? AND parentid = 0
+        AND path < (SELECT path FROM messages WHERE id = ?)
+        LIMIT ?
+)
+ORDER BY path DESC, id DESC;
 
 
+-- do Vote
+
+-- INSERT INTO Vote (nickname, voice, threadid)
+--     SELECT ?::CITEXT, ?, T.id FROM Thread T
+--         WHERE T.slug = ?::CITEXT
+--     ON CONFLICT (nickname, threadid) 
+--     DO UPDATE
+--         SET voice = ?;
+
+
+-- INSERT INTO Vote (nickname, voice, threadid)
+--     VALUES(?::CITEXT, ?, ?) 
+--     ON CONFLICT (nickname, threadid)
+--     DO UPDATE
+--         SET voice = ?;
+
+-- SELECT * FROM thread WHERE id = ?;
 
 
     
