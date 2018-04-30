@@ -38,10 +38,10 @@ public class PostManager {
                     .collect(Collectors.toList());
         }
         catch (BatchUpdateException e) {
-            if (e.getNextException().getMessage().equals("ERROR: invalid_foreign_key")) {
+            if (e.getNextException().getMessage().toLowerCase().equals("ERROR: invalid_foreign_key".toLowerCase())) {
                 throw new PostAlreadyCreated();
             }
-            throw new ThreadNotFound();
+            throw new PostAlreadyCreated();
         }
         catch (Exception e) {
             throw new ThreadNotFound();

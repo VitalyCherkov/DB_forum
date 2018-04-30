@@ -84,6 +84,8 @@ public class PostDao {
     }
 
     private List<PostDBModel> create(Connection con, String slugOrId, List<Post> posts) throws Exception {
+        log.error("START create posts");
+
         Timestamp created = new Timestamp(System.currentTimeMillis());
 
         ResultSet rs = getThreadForumRS(con, slugOrId);
