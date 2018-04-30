@@ -24,3 +24,4 @@
 /spring-boot/dist/
 /spring-boot/nbdist/
 /spring-boot/.nb-gradle/
+*.swp
