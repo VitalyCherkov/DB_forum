@@ -23,13 +23,11 @@ public class ThreadController {
     public ResponseEntity<List<Thread>> threads(
             @PathVariable String slug,
             @RequestParam(required = false, defaultValue = "-1") Integer limit,
-            @RequestParam(required = false, defaultValue = "") String since,
+            @RequestParam(required = false) String since,
             @RequestParam(required = false, defaultValue = "false") Boolean desc
     ) {
-        return new ResponseEntity<List<Thread>>(
-                threadManager.getByForum(slug, limit, since, desc),
-                HttpStatus.OK
-        );
+        return ResponseEntity
+                .ok(threadManager.getByForum(slug, limit, since, desc));
     }
 
     @PostMapping(value = "/api/forum/{slug}/create", produces = "application/json")
@@ -37,20 +35,18 @@ public class ThreadController {
             @PathVariable String slug,
             @RequestBody Thread thread
     ) {
-        return new ResponseEntity<Thread>(
-                threadManager.create(thread),
-                HttpStatus.CREATED
-        );
+        thread.forum = slug;
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(threadManager.create(thread));
     }
 
     @GetMapping(value = "/api/thread/{slug_or_id}/details", produces = "application/json")
     public ResponseEntity<Thread> details(
             @PathVariable String slug_or_id
     ) {
-        return new ResponseEntity<Thread>(
-                threadManager.get(slug_or_id),
-                HttpStatus.OK
-        );
+        return ResponseEntity
+                .ok(threadManager.get(slug_or_id));
     }
 
     @PostMapping(value = "/api/thread/{slug_or_id}/details", produces = "application/json")
@@ -58,10 +54,8 @@ public class ThreadController {
             @PathVariable String slug_or_id,
             @RequestBody Thread thread
     ) {
-        return new ResponseEntity<Thread>(
-                threadManager.update(slug_or_id, thread),
-                HttpStatus.OK
-        );
+        return ResponseEntity
+                .ok(threadManager.update(slug_or_id, thread));
     }
 
     @PostMapping(value = "/api/thread/{slug_or_id}/vote", produces = "application/json")
@@ -69,10 +63,8 @@ public class ThreadController {
             @PathVariable String slug_or_id,
             @RequestBody Vote vote
     ) {
-        return new ResponseEntity<Thread>(
-                threadManager.doVote(slug_or_id, vote),
-                HttpStatus.OK
-        );
+        return ResponseEntity
+                .ok(threadManager.doVote(slug_or_id, vote));
     }
 
 }

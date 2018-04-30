@@ -16,12 +16,12 @@ public class FlatSort implements IGetSort {
         );
         destArgs.add(threadId);
 
-        if (since != null) {
+        if (since != -1) {
             if (desc != null && desc) {
-                sql.append(" AND id < since");
+                sql.append(" AND id < ?");
             }
             else {
-                sql.append(" AND id > since");
+                sql.append(" AND id > ?");
             }
             destArgs.add(since);
         }
@@ -33,7 +33,7 @@ public class FlatSort implements IGetSort {
             sql.append(" ORDER BY id ASC");
         }
 
-        if (limit != null) {
+        if (limit != -1) {
             sql.append(" LIMIT ?");
             destArgs.add(limit);
         }

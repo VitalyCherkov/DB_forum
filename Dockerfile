@@ -1,9 +1,3 @@
-
-# sudo docker system prune
-# sudo docker build -t v.cherkov .
-# sudo docker run -p 5000:5000 --name v.cherkov -t v.cherkov
-# docker stop v.cherkov && docker rm v.cherkov 
-
 FROM ubuntu:16.04
 LABEL maintainer="vv-ch@bk.ru"
 

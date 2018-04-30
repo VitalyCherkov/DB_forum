@@ -20,17 +20,14 @@ public class ServiceController {
     @PostMapping(value = "/api/service/clear", produces = "application/json")
     public ResponseEntity<Object> clean() {
         serviceManager.cleear();
-        return new ResponseEntity<Object>(
-                HttpStatus.OK
-        );
+        return ResponseEntity
+                .ok().build();
     }
 
     @GetMapping(value = "/api/service/status", produces = "application/json")
     public ResponseEntity<Status> getStatus() {
-        return new ResponseEntity<Status>(
-                serviceManager.getStatus(),
-                HttpStatus.OK
-        );
+        return ResponseEntity
+                .ok(serviceManager.getStatus());
     }
 
 

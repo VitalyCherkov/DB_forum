@@ -12,30 +12,39 @@ public class ParentTreeSort implements IGetSort {
 
         StringBuilder sql = new StringBuilder(
             "SELECT * FROM Post WHERE path[1] IN (\n" +
-            "   SELECT id FROM Post WHERE threadid = ? AND parentid = 0\n"
+            "   SELECT id FROM Post WHERE threadid = ? AND parentid = 0 "
         );
         destArgs.add(threadId);
 
-        if (since != null) {
-            if (desc != null && desc) {
-                sql.append("AND path < (SELECT path FROM messages WHERE id = ?)\n");
+        if (since != -1) {
+            if (desc) {
+                sql.append("AND path[1] < (SELECT path[1] FROM Post WHERE id = ?) ");
             }
             else {
-                sql.append("AND path > (SELECT path FROM messages WHERE id = ?)\n");
+                sql.append("AND path > (SELECT path FROM Post WHERE id = ?) ");
             }
             destArgs.add(since);
         }
 
-        if (limit != null) {
-            sql.append("LIMIT ? )\n");
+        if (desc) {
+            sql.append("ORDER BY path[1] DESC, path ASC, id ASC ");
+        }
+        else {
+            sql.append("ORDER BY path ASC, id ASC ");
+        }
+
+        if (limit != -1) {
+            sql.append("LIMIT ?\n");
             destArgs.add(limit);
         }
 
-        if (desc != null && desc) {
-            sql.append("ORDER BY path DESC, id DESC");
+        sql.append(") ");
+
+        if (desc) {
+            sql.append("ORDER BY path[1] DESC, path ASC, id ASC;");
         }
         else {
-            sql.append("ORDER BY path ASC, id ASC");
+            sql.append("ORDER BY path ASC, id ASC;");
         }
 
         return sql.toString();

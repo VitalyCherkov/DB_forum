@@ -1,21 +1,23 @@
 package ru.mail.park.cherkov.db.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 import ru.mail.park.cherkov.db.models.api.Post;
-import ru.mail.park.cherkov.db.models.api.Thread;
 import ru.mail.park.cherkov.db.models.db.PostDBModel;
 import ru.mail.park.cherkov.db.models.errors.ThreadNotFound;
 import ru.mail.park.cherkov.db.models.errors.UserNotFound;
 import ru.mail.park.cherkov.db.utils.sqlGenerators.GetSortSql;
 
-import javax.sql.RowSet;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class PostDao {
@@ -23,6 +25,8 @@ public class PostDao {
     JdbcTemplate template;
     GetSortSql getSortSql;
     RowMapper <PostDBModel> rowMapper;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
 
     public PostDao(JdbcTemplate template, GetSortSql getSortSql) {
 
@@ -42,7 +46,7 @@ public class PostDao {
     }
 
     public PostDBModel getById(Long id) {
-        String sql = "SELECT * FROM Post WHERE Post.id = ?;";
+        String sql = "SELECT * FROM Post WHERE id = ?;";
 
         return template.queryForObject(
                 sql,
@@ -53,8 +57,8 @@ public class PostDao {
 
     public PostDBModel updateMessage(Long id, String message) {
         String sql = "UPDATE Post\n" +
-                    "    SET Post.messagetext = ?\n" +
-                    "    WHERE Post.id = id\n" +
+                    "    SET messagetext = COALESCE(?, messagetext)\n" +
+                    "    WHERE Post.id = ?\n" +
                     "    RETURNING *;";
 
         return template.queryForObject(
@@ -92,36 +96,58 @@ public class PostDao {
             return new ArrayList<PostDBModel>();
         }
 
-        PreparedStatement ps = con.prepareStatement(
-            "INSERT INTO Post (userid, usernickname, threadid, threadslug, forumid, forumslug, messagetext, created, parentid)\n" +
-                "    SELECT U.id, U.nickname, ?, ?::CITEXT, ?, ?::CITEXT, ?, ?, ?\n" +
-                "    FROM User AS U\n" +
-                "    WHERE U.nickname = ?::CITEXT;"
+        SqlRowSet postsIds = template.queryForRowSet(
+                "SELECT nextval('Post_id_seq') FROM generate_series(1, ?);",
+                posts.size()
         );
 
-        SqlRowSet postsIds = template.queryForRowSet(
-                "SELECT nextval('post_id_seq') FROM generate_series(1, ?);",
-                posts.size()
+
+        PreparedStatement ps = con.prepareStatement(
+            "INSERT INTO Post (" +
+                    "id, " +
+                    "userid, " +
+                    "usernickname, " +
+                    "threadid, " +
+                    "threadslug, " +
+                    "forumslug, " +
+                    "messagetext, " +
+                    "created, " +
+                    "parentid" +
+                    ")\n" +
+                "   SELECT\n" +
+                "       ?,\n" +
+                "       U.id,\n" +
+                "       U.nickname,\n" +
+                "       ?,\n" +
+                "       ?::CITEXT,\n" +
+                "       ?::CITEXT,\n" +
+                "       ?,\n" +
+                "       ?::timestamptz,\n" +
+                "       ?\n" +
+                "   FROM \"User\" AS U\n" +
+                "   WHERE U.nickname = ?::CITEXT;",
+                Statement.NO_GENERATED_KEYS
         );
 
         posts.forEach(post -> {
             postsIds.next();
             post.id = postsIds.getLong(1);
             try {
-                ps.setLong(1, threadId);
-                ps.setString(2, threadSlug);
-                ps.setLong(3, forumId);
+                ps.setLong(1, post.id);
+                ps.setLong(2, threadId);
+                ps.setString(3, threadSlug);
                 ps.setString(4, forumSlug);
                 ps.setString(5, post.message);
                 ps.setTimestamp(6, created);
-                ps.setLong(7, post.parentId);
+                ps.setLong(7, post.parent);
                 ps.setString(8, post.author);
                 ps.addBatch();
             }
             catch (SQLException e) {
-                // i don't know
+                log.error("caught");
             }
         });
+
 
         PreparedStatement psUpdatePostsCont = con.prepareStatement(
             "UPDATE Forum\n" +
@@ -132,10 +158,11 @@ public class PostDao {
         psUpdatePostsCont.setLong(2, forumId);
 
         try {
-            if (ps.executeBatch().length == 0) {
+            int[] result = ps.executeBatch();
+            psUpdatePostsCont.executeUpdate();
+            if (IntStream.of(result).anyMatch(value -> value == 0)) {
                 throw new UserNotFound();
             }
-            psUpdatePostsCont.executeBatch();
             con.commit();
         }
         catch (Exception e) {
@@ -150,7 +177,7 @@ public class PostDao {
                         post.message,
                         false,
                         threadId,
-                        post.parentId,
+                        post.parent,
                         post.author,
                         forumSlug,
                         created
@@ -184,6 +211,7 @@ public class PostDao {
         if (!rs.next()) {
             throw new ThreadNotFound();
         }
+
         return rs;
     }
 

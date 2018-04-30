@@ -4,6 +4,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import ru.mail.park.cherkov.db.dao.PostDao;
 import ru.mail.park.cherkov.db.dao.ThreadDao;
+import ru.mail.park.cherkov.db.dao.UserDao;
 import ru.mail.park.cherkov.db.models.api.Post;
 import ru.mail.park.cherkov.db.models.errors.PostAlreadyCreated;
 import ru.mail.park.cherkov.db.models.errors.ThreadNotFound;
@@ -16,12 +17,13 @@ import java.util.stream.Collectors;
 @Service
 public class PostManager {
 
-    private ThreadDao threadDao;
+    private UserManager userManager;
+    private ThreadManager threadManager;
     private PostDao postDao;
     private PostMapper postMapper;
 
-    public PostManager(ThreadDao threadDao, PostDao postDao, PostMapper postMapper) {
-        this.threadDao = threadDao;
+    public PostManager(UserManager userManager, ThreadManager threadManager, PostDao postDao, PostMapper postMapper) {
+        this.threadManager = threadManager;
         this.postDao = postDao;
         this.postMapper = postMapper;
     }
@@ -73,16 +75,10 @@ public class PostManager {
             Boolean desc,
             String sortType
     ) {
-        if (slugOrId.matches("[0-9]+")) {
-            threadDao.getBySlugOrId(null, Long.parseLong(slugOrId));
-        }
-        else {
-            threadDao.getBySlugOrId(slugOrId, null);
-        }
+        threadManager.get(slugOrId);
         return postDao.getSorted(slugOrId, sortType, limit, since, desc)
                 .stream()
                 .map(postDBModel -> postMapper.convert(postDBModel))
                 .collect(Collectors.toList());
     }
-
 }

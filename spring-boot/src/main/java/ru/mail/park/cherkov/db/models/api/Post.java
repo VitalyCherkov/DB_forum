@@ -8,49 +8,41 @@ import java.sql.Timestamp;
 
 public class Post {
 
-    @JsonProperty("author")
-    public String author;
+    public String author = "";
 
-    @JsonProperty("created")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-    public Timestamp created;
+    public Timestamp created = null;
 
-    @JsonProperty("forum")
-    public String forum;
+    public String forum = "";
 
-    @JsonProperty("id")
-    public Long id;
+    public Long id = 0L;
 
-    @JsonProperty("isEdited")
-    public Boolean isEdited;
+    public Boolean isEdited = false;
 
-    @JsonProperty("message")
-    public String message;
+    public String message = "";
 
-    @JsonProperty("parent")
-    public Long parentId;
+    public Long parent = 0L;
 
-    @JsonProperty("thread")
-    public Long threadId;
+    public Long thread = 0L;
 
     @JsonCreator
     public Post(
-            String author,
-            Timestamp created,
-            String forum,
-            Long id,
-            Boolean isEdited,
-            String message,
-            Long parentId,
-            Long threadId
+            @JsonProperty("author") String author,
+            @JsonProperty("created")
+            @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX") Timestamp created,
+            @JsonProperty("forum") String forum,
+            @JsonProperty("id") Long id,
+            @JsonProperty("isEdited") Boolean isEdited,
+            @JsonProperty("message") String message,
+            @JsonProperty("parent") Long parent,
+            @JsonProperty("thread") Long thread
     ) {
-        this.author = author;
+        this.author = author != null ? author : "";
         this.created = created;
-        this.forum = forum;
-        this.id = id;
-        this.isEdited = isEdited;
+        this.forum = forum != null ? forum : "";
+        this.id = id != null ? id : 0L;
+        this.isEdited = isEdited != null ? isEdited : false;
         this.message = message;
-        this.parentId = parentId;
-        this.threadId = threadId;
+        this.parent = parent != null ? parent : 0L;
+        this.thread = thread != null ? thread : 0L;
     }
 }

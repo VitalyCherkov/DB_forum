@@ -96,30 +96,31 @@ public class UserDao {
                 "    U.fullname AS fullname, \n" +
                 "    U.nickname AS nickname\n" +
                 "    FROM (\n" +
-                "        SELECT ForumUser.userid AS fid FROM ForumUser\n" +
-                "            WHERE ForumUser.forumslug = ?::CITEXT "
+                "        SELECT FU.userid AS uid FROM ForumUser FU\n" +
+                "            WHERE FU.forumslug = ?::CITEXT "
         );
         args.add(forumSlug);
 
-        if (sinceNickname != null) {
+        if (!sinceNickname.equals("")) {
             if (desc) {
-                sql.append("AND ForumUser.nickname < ?::CITEXT\n");
+                sql.append("AND FU.nickname < ?::CITEXT\n");
             }
             else {
-                sql.append("AND ForumUser.nickname > ?::CITEXT\n");
+                sql.append("AND FU.nickname > ?::CITEXT\n");
             }
             args.add(sinceNickname);
         }
 
-        sql.append(") AS F JOIN \"User\" AS U ON U.id = F.userid");
+        sql.append(") AS F JOIN \"User\" AS U ON U.id = F.uid");
+
         if (desc) {
-            sql.append(" ORDER BY U.nickname DESC");
+            sql.append(" ORDER BY U.nickname DESC ");
         }
         else {
-            sql.append(" ORDER BY U.nickname ASC");
+            sql.append(" ORDER BY U.nickname ASC ");
         }
 
-        if (limit >= 0) {
+        if (limit != -1) {
             sql.append("LIMIT ?");
             args.add(limit);
         }

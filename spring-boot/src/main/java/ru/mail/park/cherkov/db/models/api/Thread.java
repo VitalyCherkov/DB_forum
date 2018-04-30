@@ -13,32 +13,22 @@ public class Thread {
     public String forum;
     public Long id = -1L;
     public String message;
-    public String slug = "";
+    public String slug = null;
     public String title;
     public Integer votes = 0;
 
-    public Thread(
-            @JsonProperty("author")
-            String author,
-            @JsonProperty("created")
-            @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-            Timestamp created,
-            @JsonProperty("message")
-            String message,
-            @JsonProperty("title")
-            String title
-    ) {
-        this.author = author;
-        this.created = created;
-        this.message = message;
-        this.title = title;
-    }
-
     @JsonCreator
     public Thread(
+            @JsonProperty("author") String author,
+            @JsonProperty("created")
+            @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX") Timestamp created,
+            @JsonProperty("forum") String forum,
             @JsonProperty("message") String message,
             @JsonProperty("title") String title
     ) {
+        this.author = author;
+        this.created = created;
+        this.forum = forum;
         this.message = message;
         this.title = title;
     }

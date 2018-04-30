@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 public class ForumController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ForumController.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private ForumManager forumManager;
 
@@ -28,24 +28,17 @@ public class ForumController {
     public ResponseEntity<Forum> create(
             @RequestBody Forum forum
     ) {
-        logger.debug(forum.toString());
-        return new ResponseEntity<>(
-                forumManager.create(forum),
-                HttpStatus.CREATED
-        );
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(forumManager.create(forum));
     }
 
     @GetMapping(value = "/api/forum/{slug}/details", produces = "application/json")
     public ResponseEntity<Forum> details(
             @PathVariable String slug
     ) {
-        logger.debug(slug);
-
-        return new ResponseEntity<>(
-                forumManager.get(slug),
-                HttpStatus.OK
-        );
-
+        return ResponseEntity
+                .ok(forumManager.get(slug));
     }
 
 }

@@ -7,15 +7,16 @@ import ru.mail.park.cherkov.db.models.api.User;
 import java.util.List;
 
 @ResponseStatus(code = HttpStatus.CONFLICT, reason = "User already created")
-public class UserAlreadyCreated extends RuntimeException {
+public class UserAlreadyCreated extends RuntimeException implements IMessageContainerError {
 
-    private List<User> users;
+    public List<User> users;
 
     public UserAlreadyCreated(List<User> users) {
         this.users = users;
     }
 
-    public List<User> getUsers() {
+    @Override
+    public Object getCustomMessage() {
         return users;
     }
 }

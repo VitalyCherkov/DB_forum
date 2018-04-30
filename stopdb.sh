@@ -1,1 +1,1 @@
-/etc/init.d/postgresql stop
+sudo /etc/init.d/postgresql stop

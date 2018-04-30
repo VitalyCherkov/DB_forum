@@ -52,7 +52,7 @@ CREATE TABLE Forum
   userid BIGINT NOT NULL
     REFERENCES "User" (id),
 
-  slug CITEXT NOT NULL,
+  slug CITEXT NOT NULL UNIQUE,
 
   posts INTEGER DEFAULT 0 NOT NULL,
 
@@ -273,7 +273,8 @@ DECLARE parentPath BIGINT[];
 BEGIN
 
   IF(NEW.parentid = 0) THEN
-    NEW.path = parentPath :: NEW.id::BIGSERIAL;
+    NEW.path = parentPath || NEW.id::BIGINT;
+    RETURN NEW;
   END IF;
 
   parentPath = (
@@ -282,7 +283,7 @@ BEGIN
   );
 
   IF (CARDINALITY(parentPath) > 0) THEN
-    NEW.path = parentPath || NEW.id::BIGSERIAL;
+    NEW.path = parentPath || NEW.id::BIGINT;
     RETURN NEW;
   END IF;
 
@@ -373,4 +374,70 @@ CREATE TRIGGER _tr_change_vote
 -- T: Forum posts inc
 -------------------------------------------------------------------------
 
+CREATE OR REPLACE FUNCTION add_to_forum_user_from_post()
+  RETURNS TRIGGER
+  LANGUAGE plpgsql
+AS $$
+BEGIN
 
+  INSERT INTO ForumUser (userid, nickname, forumslug)
+    VALUES (NEW.userid, NEW.usernickname, NEW.forumslug)
+    ON CONFLICT DO NOTHING;
+
+  RETURN NEW;
+
+END;
+$$;
+
+CREATE TRIGGER _tr_add_to_forum_user_from_post
+  AFTER INSERT
+  ON Post
+  FOR EACH ROW
+  EXECUTE PROCEDURE add_to_forum_user_from_post();
+
+CREATE OR REPLACE FUNCTION add_to_forum_user_from_thread()
+  RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+
+  INSERT INTO ForumUser (userid, nickname, forumslug)
+  VALUES (NEW.userid, NEW.nickname, NEW.forumslug)
+  ON CONFLICT DO NOTHING;
+
+  RETURN NEW;
+
+END;
+$$;
+
+CREATE TRIGGER _tr_add_to_forum_user_from_thread
+  AFTER INSERT
+  ON Thread
+  FOR EACH ROW
+EXECUTE PROCEDURE add_to_forum_user_from_thread();
+
+CREATE OR REPLACE FUNCTION change_post_edited()
+  RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+
+  IF (NEW.messagetext IS NULL) THEN
+    NEW.messagetext = OLD.messagetext;
+    RETURN NEW;
+  END IF;
+
+  IF (OLD.messagetext <> NEW.messagetext) THEN
+    NEW.isedited = TRUE;
+  END IF;
+
+  RETURN NEW;
+
+END;
+$$;
+
+CREATE TRIGGER _tr_change_post_edited
+  BEFORE UPDATE
+  ON Post
+  FOR EACH ROW
+  EXECUTE PROCEDURE change_post_edited();

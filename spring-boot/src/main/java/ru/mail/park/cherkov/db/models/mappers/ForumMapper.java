@@ -9,8 +9,8 @@ public class ForumMapper implements IMapper<ForumDBModel, Forum> {
     public Forum convert(ForumDBModel forumDBModel) {
         return new Forum(
                 forumDBModel.slug,
-                forumDBModel.title,
                 forumDBModel.author,
+                forumDBModel.title,
                 forumDBModel.posts,
                 forumDBModel.threads
         );

@@ -6,13 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Forum {
 
     public String slug;
-
     public String title;
-
     public String user;
-
     public Integer posts = 0;
-
     public Integer threads = 0;
 
     public Forum(
@@ -28,8 +24,6 @@ public class Forum {
         this.posts = posts;
         this.threads = threads;
     }
-
-
 
     @JsonCreator
     public Forum(

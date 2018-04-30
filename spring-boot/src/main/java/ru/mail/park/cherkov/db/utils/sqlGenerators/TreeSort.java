@@ -15,12 +15,12 @@ public class TreeSort implements IGetSort {
         );
         destArgs.add(threadId);
 
-        if (since != null) {
+        if (since != -1) {
             if (desc != null && desc) {
-                sql.append("AND path > (SELECT path FROM Posts WHERE id = ?)\n");
+                sql.append("AND path < (SELECT path FROM Post WHERE id = ?)\n");
             }
             else {
-                sql.append("AND path < (SELECT path FROM Posts WHERE id = ?)\n");
+                sql.append("AND path > (SELECT path FROM Post WHERE id = ?)\n");
             }
             destArgs.add(since);
         }
@@ -32,7 +32,7 @@ public class TreeSort implements IGetSort {
             sql.append("ORDER BY path ASC, id ASC\n");
         }
 
-        if (limit != null) {
+        if (limit != -1) {
             sql.append("LIMIT ?");
             destArgs.add(limit);
         }

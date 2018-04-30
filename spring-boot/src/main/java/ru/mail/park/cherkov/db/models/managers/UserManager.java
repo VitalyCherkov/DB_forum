@@ -11,6 +11,7 @@ import ru.mail.park.cherkov.db.models.api.User;
 import ru.mail.park.cherkov.db.models.db.UserDBModel;
 import ru.mail.park.cherkov.db.models.errors.ForumNotFound;
 import ru.mail.park.cherkov.db.models.errors.UserAlreadyCreated;
+import ru.mail.park.cherkov.db.models.errors.UserAlreadyCreatedMsg;
 import ru.mail.park.cherkov.db.models.errors.UserNotFound;
 import ru.mail.park.cherkov.db.models.mappers.UserMapper;
 
@@ -34,13 +35,13 @@ public class UserManager {
     }
 
     public User create(User user) {
-        logger.debug("KEK");
         try {
             return userMapper.convert(userDao.create(user));
         }
         catch (DuplicateKeyException exception) {
-            System.out.println("KEK");
             List<UserDBModel> foundUsers = userDao.getByNicknameOrEmail(user.nickname, user.email);
+
+            logger.debug(foundUsers.toString());
 
             throw new UserAlreadyCreated(
                     foundUsers
@@ -85,7 +86,7 @@ public class UserManager {
             return userMapper.convert(userDao.update(user));
         }
         catch (DuplicateKeyException exception) {
-            throw new UserAlreadyCreated(null);
+            throw new UserAlreadyCreatedMsg();
         }
         catch (EmptyResultDataAccessException exception) {
             throw new UserNotFound();

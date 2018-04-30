@@ -1,5 +1,7 @@
 package ru.mail.park.cherkov.db.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ public class ThreadDao {
     RowMapper<ThreadDBModel> rowMapper;
     UserDao userDao;
 
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     public ThreadDao(JdbcTemplate template, UserDao userDao) {
 
         this.template = template;
@@ -28,13 +32,13 @@ public class ThreadDao {
 
         this.rowMapper = (resultSet, i) ->
             new ThreadDBModel(
-                    resultSet.getString("author"),
-                    resultSet.getString("message"),
+                    resultSet.getString("nickname"),
+                    resultSet.getString("messagetext"),
                     resultSet.getString("slug"),
                     resultSet.getString("title"),
                     resultSet.getTimestamp("created"),
                     resultSet.getInt("votes"),
-                    resultSet.getString("forum"),
+                    resultSet.getString("forumslug"),
                     resultSet.getLong("id")
             );
 
@@ -48,10 +52,14 @@ public class ThreadDao {
                 "    U.id, U.nickname, F.id, F.slug::CITEXT, ?, ?, ?, ?::TIMESTAMPTZ\n" +
                 "    FROM Forum AS F, (\n" +
                 "        SELECT id, nickname FROM \"User\"\n" +
-                "        WHERE \"USER\".nickname = ?::CITEXT\n" +
+                "        WHERE \"User\".nickname = ?::CITEXT\n" +
                 "        ) AS U\n" +
                 "        WHERE F.slug = ?::CITEXT\n" +
                 "RETURNING *;\n";
+
+        if (thread.created == null) {
+            thread.created = new Timestamp(System.currentTimeMillis());
+        }
 
         return template.queryForObject(
                 sql,
@@ -60,6 +68,7 @@ public class ThreadDao {
                 thread.slug,
                 thread.title,
                 thread.created,
+                thread.author,
                 thread.forum
         );
 
@@ -74,14 +83,7 @@ public class ThreadDao {
         ArrayList <Object> args = new ArrayList<Object>();
 
         StringBuilder sql = new StringBuilder(
-                "SELECT T.nickname AS author,\n" +
-                "       T.created AS created,\n" +
-                "       T.id AS id,\n" +
-                "       T.forumslug AS forum,\n" +
-                "       T.messagetext AS \"message\",\n" +
-                "       T.slug AS slug,\n" +
-                "       T.title AS title,\n" +
-                "       T.votes AS votes \n" +
+                "SELECT * \n" +
                 "FROM Thread T\n" +
                 "WHERE ?::CITEXT = T.forumslug\n"
         );
@@ -98,10 +100,10 @@ public class ThreadDao {
         }
 
         if (desc) {
-            sql.append(" ORDER BY DESC");
+            sql.append(" ORDER BY created DESC");
         }
         else {
-            sql.append(" ORDER BY ASC");
+            sql.append(" ORDER BY created ASC");
         }
 
         if (limit >= 0) {
@@ -121,16 +123,7 @@ public class ThreadDao {
     public ThreadDBModel getBySlugOrId(String slug, Long id) {
         ArrayList <Object> args = new ArrayList<Object>();
 
-        String sql = "SELECT \n" +
-                "    T.id AS id,\n" +
-                "    T.slug AS slug,\n" +
-                "    T.messagetext AS \"message\",\n" +
-                "    T.nickname AS author,\n" +
-                "    T.created AS created,\n" +
-                "    T.forumslug AS forum,\n" +
-                "    T.title AS title,\n" +
-                "    T.votes AS votes\n" +
-                "FROM Thread T WHERE";
+        String sql = "SELECT * FROM Thread T WHERE";
 
         if (slug != null) {
             sql += " T.slug = ?::CITEXT;";
@@ -149,39 +142,21 @@ public class ThreadDao {
     }
 
     public ThreadDBModel updateBySlugOrId(Thread thread) {
-        ArrayList <Object> args = new ArrayList<Object>();
-
-        args.add(thread.message);
-        args.add(thread.title);
-
         String sql =    "UPDATE Thread T\n" +
-                        "    SET (T.messagetext, T.title) = (?, ?) WHERE\n";
-
-        if (thread.slug != null) {
-            sql += " T.slug = ?::CITEXT;";
-            args.add(thread.slug);
-        }
-        else {
-            sql += " T.id = ?";
-            args.add(thread.id);
-        }
-
-        sql +=  "    RETURNING \n" +
-                "        T.id AS id,\n" +
-                "        T.slug AS slug,\n" +
-                "        T.messagetext AS \"message\",\n" +
-                "        T.nickname AS author,\n" +
-                "        T.created AS created,\n" +
-                "        T.forumslug AS forum,\n" +
-                "        T.title AS title,\n" +
-                "        T.votes AS votes;";
+                        "    SET (messagetext, title) = " +
+                        "   (" +
+                        "       COALESCE(?, messagetext), " +
+                        "       COALESCE(?, title)" +
+                        ") WHERE slug = ?::CITEXT OR id = ? RETURNING *;\n";
 
         return template.queryForObject(
                 sql,
                 rowMapper,
-                args.toArray()
+                thread.message,
+                thread.title,
+                thread.slug,
+                thread.id
         );
-
     }
 
     public ThreadDBModel doVoteBySlug(Vote vote, String slug) {

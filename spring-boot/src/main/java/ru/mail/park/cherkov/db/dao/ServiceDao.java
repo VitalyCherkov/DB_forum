@@ -23,12 +23,12 @@ public class ServiceDao {
 
     public void clear() {
         template.update(
-                "DELETE FROM ForumUser;" +
-                    "DELETE FROM Votes;" +
-                    "DELETE FROM Post;" +
-                    "DELETE FROM Thread;" +
-                    "DELETE FROM Forum;" +
-                    "DELETE FROM \"User\""
+                "DELETE FROM ForumUser; " +
+                    "DELETE FROM Vote; " +
+                    "DELETE FROM Post; " +
+                    "DELETE FROM Thread; " +
+                    "DELETE FROM Forum; " +
+                    "DELETE FROM \"User\";"
         );
     }
 
@@ -41,7 +41,7 @@ public class ServiceDao {
 
         Status status = template.queryForObject(sql, rowMapper);
         status.user = template.queryForObject(usrCount,
-                (resultSet, i) -> resultSet.getInt("\"user\""));
+                (resultSet, i) -> resultSet.getInt("usr"));
 
         return status;
     }

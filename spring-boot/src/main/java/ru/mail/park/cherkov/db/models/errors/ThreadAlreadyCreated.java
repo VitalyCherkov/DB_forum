@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.mail.park.cherkov.db.models.api.Thread;
 
-@ResponseStatus(code = HttpStatus.CONFLICT, reason = "Thread already created")
-public class ThreadAlreadyCreated extends RuntimeException{
+@ResponseStatus(code = HttpStatus.CONFLICT/*, reason = "Thread already created"*/)
+public class ThreadAlreadyCreated extends RuntimeException implements IMessageContainerError {
 
     private Thread thread;
 
@@ -13,8 +13,8 @@ public class ThreadAlreadyCreated extends RuntimeException{
         this.thread = thread;
     }
 
-    public Thread getThread() {
+    @Override
+    public Object getCustomMessage() {
         return thread;
     }
-
 }

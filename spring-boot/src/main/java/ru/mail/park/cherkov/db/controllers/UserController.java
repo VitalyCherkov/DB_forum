@@ -26,10 +26,8 @@ public class UserController {
             @RequestParam(required = false, defaultValue = "") String since,
             @RequestParam(required = false, defaultValue = "false") Boolean desc
     ) {
-        return new ResponseEntity<List<User>>(
-                userManager.getList(slug, limit, since, desc),
-                HttpStatus.OK
-        );
+        return ResponseEntity
+                .ok(userManager.getList(slug, limit, since, desc));
     }
 
     @PostMapping(value = "/api/user/{nickname}/create", produces = "application/json")
@@ -40,23 +38,18 @@ public class UserController {
         if (user == null) {
             user = new User();
         }
-        LoggerFactory.getLogger(UserController.class).debug(user.toString());
-
         user.nickname = nickname;
-        return new ResponseEntity<User>(
-                userManager.create(user),
-                HttpStatus.CREATED
-        );
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(userManager.create(user));
     }
 
     @GetMapping(value = "/api/user/{nickname}/profile", produces = "application/json")
     public ResponseEntity<User> getUser(
             @PathVariable String nickname
     ) {
-        return new ResponseEntity<User>(
-                userManager.get(nickname),
-                HttpStatus.OK
-        );
+        return ResponseEntity
+                .ok(userManager.get(nickname));
     }
 
     @PostMapping(value = "/api/user/{nickname}/profile", produces = "application/json")
@@ -65,10 +58,8 @@ public class UserController {
             @RequestBody User user
     ) {
         user.nickname = nickname;
-        return new ResponseEntity<User>(
-                userManager.update(user),
-                HttpStatus.OK
-        );
+        return ResponseEntity
+                .ok(userManager.update(user));
     }
 
 }
